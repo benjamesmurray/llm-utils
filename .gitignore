@@ -1,0 +1,26 @@
+# Ignore everything by default
+/*
+
+# Allow the .gitignore and .ignore themselves
+!.gitignore
+!.ignore
+
+# Allow the utils directory structure
+!/utils/
+/utils/*
+!/utils/launch/
+!/utils/test/
+
+# Allow launch scripts but exclude logs
+/utils/launch/*
+!/utils/launch/launch-dual.sh
+!/utils/launch/launch-server.sh
+
+# Allow test frameworks but exclude results
+/utils/test/*
+!/utils/test/combined_framework/
+!/utils/test/data_clerk_framework/
+!/utils/test/framework/
+!/utils/test/*.py
+!/utils/test/*.sh
+__pycache__/

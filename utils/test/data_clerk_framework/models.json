@@ -1,0 +1,97 @@
+{
+  "gemma-26b-q4": {
+    "path": "/home/llm/downloads/.archive/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf",
+    "alias": "gemma-4-26b-q4",
+    "context_size": 50000,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-26b-q5": {
+    "path": "/home/llm/downloads/gemma/gemma-4-26B-A4B-it-UD-Q5_K_M.gguf",
+    "alias": "gemma-4-26b-q5",
+    "context_size": 50000,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-26b-q5xl": {
+    "path": "/home/llm/downloads/gemma/gemma-4-26B-A4B-it-UD-Q5_K_XL.gguf",
+    "alias": "gemma-4-26b-q5xl",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-e4b-iq2": {
+    "path": "/home/llm/downloads/gemma/gemma-4-E4B-it-UD-IQ2_M.gguf",
+    "alias": "gemma-4-e4b-iq2",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "nemotron-4b": {
+    "path": "/home/llm/downloads/nemotron/NVIDIA-Nemotron-3-Nano-4B-IQ4_NL.gguf",
+    "alias": "nemotron-3-nano-4b",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-e4b-iq4": {
+    "path": "/home/llm/downloads/gemma/gemma-4-E4B-it-IQ4_NL.gguf",
+    "alias": "gemma-4-e4b-iq4",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-e4b-q4xl": {
+    "path": "/home/llm/downloads/gemma/gemma-4-E4B-it-UD-Q4_K_XL.gguf",
+    "alias": "gemma-4-e4b-q4xl",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-31b-iq4": {
+    "path": "/home/llm/downloads/gemma/gemma-4-31B-it-IQ4_NL.gguf",
+    "alias": "gemma-4-31b-iq4",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-31b-q4s": {
+    "path": "/home/llm/downloads/gemma/gemma-4-31B-it-Q4_K_S.gguf",
+    "alias": "gemma-4-31b-q4s",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-31b-q4xl": {
+    "path": "/home/llm/downloads/gemma/gemma-4-31B-it-UD-Q4_K_XL.gguf",
+    "alias": "gemma-4-31b-q4xl",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "gemma-31b-q5": {
+    "path": "/home/llm/downloads/.archive/gemma-4-31B-it-Q5_K_M.gguf",
+    "alias": "gemma-4-31b-q5",
+    "context_size": 8192,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "qwen-27b": {
+    "path": "/home/llm/downloads/qwen/Qwen3.5-27B-Q5_K_M.gguf",
+    "alias": "qwen-3.5-27b",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12
+  }
+}

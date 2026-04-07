@@ -1,0 +1,26 @@
+[
+  {
+    "id": "coding_token_bucket",
+    "name": "Token Bucket Rate Limiter",
+    "system_prompt": "You are a distinguished Principal Staff Software Engineer, an expert in distributed systems, high-performance computing, and polyglot programming.",
+    "user_prompt": "Implement a highly concurrent, thread-safe Token Bucket rate limiter algorithm. You MUST provide the full implementation in three distinct languages: 1) Kotlin (using Coroutines and Mutex/Atomic primitives), 2) Python (using asyncio), and 3) Rust (using Tokio and appropriate concurrency primitives). Pay extremely close attention to code quality, idiomatic naming conventions, precise indentation, absence of typos, and handling of edge cases, as these implementations will be rigorously evaluated for production readiness. Explain the concurrency trade-offs and primitives chosen in each language."
+  },
+  {
+    "id": "lint_python",
+    "name": "Python Linting Challenge",
+    "system_prompt": "You are a senior Python engineer and expert code reviewer. Your job is to review the code and identify all PEP8 violations, type hinting errors, and anti-patterns.",
+    "user_prompt": "Please review the following Python code. Identify all linting issues, explain why they are bad, and provide the fully corrected code.\n\n```python\nimport os,sys\ndef Calculate_Tax(amount,rate):\n  if amount == None:\n    return 0\n  try:\n   tax=amount*(rate/100)\n  except:\n   pass\n  return tax\n\ndef process_Data (  data_list ):\n    result=[]\n    for i in range(len(data_list)):\n        result.append( Calculate_Tax(data_list[i], 5) )\n    return result\n```"
+  },
+  {
+    "id": "lint_jsts",
+    "name": "JS/TS Linting Challenge",
+    "system_prompt": "You are a principal JavaScript/TypeScript engineer. Your job is to review the code and identify strict mode violations, async handling errors, and modern JS/TS best practices.",
+    "user_prompt": "Please review the following TypeScript code. Identify all linting issues, explain why they are bad, and provide the fully corrected code.\n\n```typescript\nvar data = [];\n\nasync function fetchAndProcess(url: any) {\n  let res = await fetch(url)\n  let json = await res.json()\n  \n  for (let i = 0; i < json.length; i++) {\n    data.push(json[i])\n  }\n  \n  setTimeout(function() {\n    console.log(data)\n  }, 0)\n}\n\nfetchAndProcess('https://api.example.com/items')\n.catch(err => console.log('error'))\n```"
+  },
+  {
+    "id": "lint_cpp",
+    "name": "C++ Linting Challenge",
+    "system_prompt": "You are a senior C++ engineer, familiar with modern C++ (C++11 through C++20) and memory safety. Your job is to review the code and identify memory leaks, pointer issues, and poor practices.",
+    "user_prompt": "Please review the following C++ code. Identify all linting issues (including memory management problems, use of raw pointers where smart pointers are appropriate, and inefficient parameter passing), explain why they are bad, and provide the fully corrected code.\n\n```cpp\n#include <iostream>\n#include <string>\n\nclass User {\npublic:\n    std::string name;\n    User(std::string n) { name = n; }\n};\n\nvoid printUserInfo(User u) {\n    std::cout << \"User: \" << u.name << std::endl;\n}\n\nint main() {\n    User* u1 = new User(\"Alice\");\n    User* u2 = new User(\"Bob\");\n    \n    printUserInfo(*u1);\n    \n    delete u1;\n    // forgot to delete u2\n    return 0;\n}\n```"
+  }
+]

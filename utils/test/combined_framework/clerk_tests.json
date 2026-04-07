@@ -1,0 +1,26 @@
+[
+  {
+    "id": "data_clerk_toon",
+    "name": "The Data Clerk Challenge (JSON-to-TOON Compression)",
+    "system_prompt": "You are an expert Data Clerk AI responsible for strict data transformation and extreme payload compression. Your goal is 100% data retention while drastically reducing token count. Follow formatting rules precisely.",
+    "user_prompt": "Convert the following JSON file tree representation into TOON (Token-Oriented Object Notation). TOON uses YAML-style indentation for hierarchy structure, but CSV-style rows for node properties. The format for each node must be `name, type, size`. Do not drop any files, nodes, or data points from the original payload. Maintain strict indentation.\n\nJSON Payload:\n{\n  \"root\": {\n    \"type\": \"dir\",\n    \"size\": 4096,\n    \"children\": [\n      {\"name\": \"src\", \"type\": \"dir\", \"size\": 1024, \"children\": [\n        {\"name\": \"index.ts\", \"type\": \"file\", \"size\": 500},\n        {\"name\": \"utils.ts\", \"type\": \"file\", \"size\": 300},\n        {\"name\": \"auth\", \"type\": \"dir\", \"size\": 200, \"children\": [\n          {\"name\": \"jwt.ts\", \"type\": \"file\", \"size\": 200}\n        ]}\n      ]},\n      {\"name\": \"package.json\", \"type\": \"file\", \"size\": 800},\n      {\"name\": \"README.md\", \"type\": \"file\", \"size\": 1200},\n      {\"name\": \"tests\", \"type\": \"dir\", \"size\": 100, \"children\": [\n        {\"name\": \"main.spec.ts\", \"type\": \"file\", \"size\": 100}\n      ]}\n    ]\n  }\n}"
+  },
+  {
+    "id": "persistence_extraction",
+    "name": "The Persistence Extraction Challenge",
+    "system_prompt": "You are a state persistence analyzer tool. Your job is to extract explicit, permanent user preferences and rules from a chat transcript. You must not hallucinate extra rules or infer rules from casual conversation.",
+    "user_prompt": "Extract the explicit, permanent user preferences from the following chat transcript. Return ONLY a valid JSON array of strings containing the rules, nothing else.\n\nTranscript:\nUser: Hey, can you write a login component for me?\nModel: Sure, here is a React class component for your login...\nUser: No, don't use React class components, use hooks. Also, while we are setting this up, make sure all Python scripts use snake_case for variables.\nModel: Apologies, I have updated the React component to use hooks and will use snake_case for Python.\nUser: Looks good. One more thing, I always prefer using vitest over jest for testing going forward.\nModel: Understood, vitest it is. Anything else for today?\nUser: Nope, that's it."
+  },
+  {
+    "id": "janitor_sanitization",
+    "name": "The Janitor Challenge (Payload Sanitization)",
+    "system_prompt": "You are a fast and reliable JSON repair and sanitization pipeline. You receive broken or heavily wrapped JSON output and must return ONLY the repaired, perfectly valid JSON string. Do not output markdown code blocks. Do not output conversational filler. Fix any trailing commas, unescaped quotes, or missing brackets.",
+    "user_prompt": "Repair and extract the valid JSON from the following broken payload:\n\nHere is the JSON you requested for the tool call:\n```json\n{\n  \"tool\": \"write_file\",\n  \"parameters\": {\n    \"path\": \"/src/app.js\",\n    \"content\": \"function greet() { console.log(\"Hello World!\"); }\"\n  },\n  \"metadata\": { \"status\": \"pending\", }\n```\nLet me know if you need anything else! I am happy to help!"
+  },
+  {
+    "id": "epoch_summarization",
+    "name": "Epoch State Summarization",
+    "system_prompt": "You are an expert technical distillation engine. You condense complex technical histories into highly concise, strict summaries. You adhere absolutely to requested constraints.",
+    "user_prompt": "Summarize the 'Architectural Decisions Made' from the following task epoch transcript. You MUST provide exactly 3 bullet points. No more, no less.\n\nTranscript:\nUser: Let's design the authentication middleware.\nModel: We could use session cookies or JWTs. What do you prefer?\nUser: Let's go with JWTs for stateless auth. \nModel: Done. Where should we store them? LocalStorage or HTTP-only cookies?\nUser: HTTP-only cookies to prevent XSS.\nModel: Configured. What about revoking tokens? It's a common issue with stateless JWTs.\nUser: Let's use Redis to maintain a quick token blacklist for when users log out.\nModel: Implemented the Redis blacklist. Should we use an ORM for the user table?\nUser: Yeah, let's just stick with Prisma for now to keep things simple.\nModel: Great, Prisma is setup."
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "gemma-26b-q4": {
+    "path": "/home/llm/downloads/gemma/gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf",
+    "alias": "gemma-4-26b-q4xl",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  },
+  "nemotron-4b": {
+    "path": "/home/llm/downloads/nemotron/NVIDIA-Nemotron-3-Nano-4B-IQ4_NL.gguf",
+    "alias": "nemotron-3-nano-4b",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0"
+  }
+}
