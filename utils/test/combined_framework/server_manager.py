@@ -3,17 +3,24 @@ import time
 import urllib.request
 import os
 import signal
+import sys
+
+# Add the parent directory to sys.path to find env_loader
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from env_loader import get_env
 
 class ServerManager:
-    def __init__(self, bin_path="/home/llm/llama.cpp/build/bin/llama-server", port=8085):
+    def __init__(self, bin_path="/home/llm/llama.cpp/build/bin/llama-server", port=None):
         self.bin_path = bin_path
-        self.port = port
+        self.port = port or int(get_env("MAIN_PORT", 8085))
+        self.host = get_env("SERVER_HOST", "0.0.0.0")
+        self.api_key = get_env("API_KEY", "2250")
         self.process = None
 
     def start(self, model_info):
         self.stop() # Ensure clean state
         
-        print(f"Starting server for model {model_info['alias']}...")
+        print(f"Starting server for model {model_info['alias']} on {self.host}:{self.port}...")
         
         cmd = [
             self.bin_path,
@@ -22,19 +29,20 @@ class ServerManager:
             "-fa", "on",
             "-c", str(model_info['context_size']),
             "-t", str(model_info['threads']),
-            "--host", "0.0.0.0",
+            "--host", self.host,
             "--port", str(self.port),
             "--alias", model_info['alias'],
             "--jinja",
             "--metrics",
-            "--api-key", "2250"
+            "--api-key", self.api_key
         ]
 
         if 'kv_flags' in model_info and model_info['kv_flags']:
-            # Split flags into individual arguments
             cmd.extend(model_info['kv_flags'].split())
+
+        if 'chat_template_kwargs' in model_info and model_info['chat_template_kwargs']:
+            cmd.extend(["--chat-template-kwargs", model_info['chat_template_kwargs']])
         
-        # We redirect stdout/stderr to a log file
         log_dir = "/home/llm/utils/launch/logs"
         os.makedirs(log_dir, exist_ok=True)
         log_file = open(f"{log_dir}/server_{model_info['alias']}.log", "w")
@@ -43,16 +51,15 @@ class ServerManager:
         if not self._wait_for_ready(model_info['alias']):
             raise RuntimeError(f"Server failed to start for {model_info['alias']}")
         
-        # Give it a few extra seconds to settle in VRAM
         print("Server ready, giving it 10 seconds to settle...")
         time.sleep(10)
         
     def _wait_for_ready(self, expected_alias, timeout=120):
-        print(f"Waiting for API to become responsive (timeout {timeout}s)...")
+        print(f"Waiting for API on {self.host}:{self.port} (timeout {timeout}s)...")
         start_time = time.time()
-        url = f"http://localhost:{self.port}/v1/models"
+        url = f"http://{self.host}:{self.port}/v1/models"
         
-        req = urllib.request.Request(url, headers={'Authorization': 'Bearer 2250'})
+        req = urllib.request.Request(url, headers={'Authorization': f'Bearer {self.api_key}'})
         
         while time.time() - start_time < timeout:
             try:
@@ -64,7 +71,6 @@ class ServerManager:
             except Exception:
                 pass
             
-            # Check if process crashed
             if self.process.poll() is not None:
                 print("Server process died unexpectedly.")
                 return False

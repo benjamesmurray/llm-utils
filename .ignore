@@ -24,3 +24,4 @@
 !/utils/test/*.py
 !/utils/test/*.sh
 __pycache__/
+!instructions.md

@@ -15,6 +15,7 @@
 /utils/launch/*
 !/utils/launch/launch-dual.sh
 !/utils/launch/launch-server.sh
+!/utils/README.md
 
 # Allow test frameworks but exclude results
 /utils/test/*
@@ -23,4 +24,7 @@
 !/utils/test/framework/
 !/utils/test/*.py
 !/utils/test/*.sh
+!/utils/test/env_loader.py
 __pycache__/
+!instructions.md
+.env

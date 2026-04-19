@@ -1,14 +1,12 @@
 #!/bin/bash
 RESULTS_DIR="/home/llm/utils/test/results"
+mkdir -p "$RESULTS_DIR"
 
-for MODEL in gemma-26b-q5 gemma-31b-iq4 gemma-31b-q4s qwen-27b qwen-35b; do
-  echo "=== Evaluating $MODEL ==="
+# Only running Qwen-35b for the rerun as requested
+for MODEL in qwen-35b; do
+  echo "=== Evaluating $MODEL with higher token limit ==="
   
   case $MODEL in
-    "gemma-26b-q5") ALIAS="gemma-4-26b-q5" ;;
-    "gemma-31b-iq4") ALIAS="gemma-4-31b-iq4" ;;
-    "gemma-31b-q4s") ALIAS="gemma-4-31b-q4s" ;;
-    "qwen-27b") ALIAS="qwen-3.5-27b" ;;
     "qwen-35b") ALIAS="qwen-3.6-35b" ;;
   esac
 
@@ -33,7 +31,7 @@ for MODEL in gemma-26b-q5 gemma-31b-iq4 gemma-31b-q4s qwen-27b qwen-35b; do
     echo "Giving the model 15 seconds to settle in VRAM/RAM before evaluation..."
     sleep 15
     echo "Running test..."
-    timeout 600s /home/llm/utils/test/test-coding-endpoint.sh $MODEL
+    /home/llm/utils/test/test-coding-endpoint.sh $MODEL
   else
     echo "Error: Server failed to initialize $MODEL in time."
   fi

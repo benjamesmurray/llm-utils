@@ -2,14 +2,21 @@ import json
 import time
 import urllib.request
 import urllib.error
+import os
+import sys
+
+# Add the parent directory to sys.path to find env_loader
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from env_loader import get_env
 
 class Evaluator:
-    def __init__(self, port=8085):
-        self.port = port
-        self.api_key = "2250"
+    def __init__(self, port=None):
+        self.port = port or int(get_env("MAIN_PORT", 8085))
+        self.host = get_env("SERVER_HOST", "0.0.0.0")
+        self.api_key = get_env("API_KEY", "2250")
         
     def run_test(self, model_alias, test_case):
-        url = f"http://localhost:{self.port}/v1/chat/completions"
+        url = f"http://{self.host}:{self.port}/v1/chat/completions"
         
         payload = {
             "model": model_alias,

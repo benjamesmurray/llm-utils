@@ -69,5 +69,13 @@
     "context_size": 32768,
     "gpu_layers": 99,
     "threads": 12
+  },
+  "qwen-35b": {
+    "path": "/home/llm/downloads/qwen/Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
+    "alias": "qwen-3.6-35b",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "chat_template_kwargs": "{\"preserve_thinking\": true}"
   }
 }

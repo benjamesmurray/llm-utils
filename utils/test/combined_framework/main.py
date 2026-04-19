@@ -40,7 +40,6 @@ def write_markdown_report(report_name, model_info, test_results):
             
     print(f"[{report_name}] Report saved to {filepath}")
 
-
 def main():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     models = load_json(os.path.join(base_dir, 'models.json'))
@@ -48,20 +47,22 @@ def main():
     coding_tests = load_json(os.path.join(base_dir, 'coding_tests.json'))
     clerk_tests = load_json(os.path.join(base_dir, 'clerk_tests.json'))
     
-    main_model_info = models.get('gemma-26b-q4')
-    clerk_model_info = models.get('nemotron-4b')
+    main_model_info = models.get('main_model')
+    clerk_model_info = models.get('clerk_model')
     
     if not main_model_info or not clerk_model_info:
         print("Required models missing in models.json")
         return
         
     print("\n" + "="*50)
-    print("Starting Sequential 'Baton Pass' Evaluation")
+    print(f"Starting Sequential 'Baton Pass' Evaluation")
+    print(f"Main Model: {main_model_info['alias']}")
+    print(f"Clerk Model: {clerk_model_info['alias']}")
     print("="*50)
 
     pre_gen_ids = ["data_clerk_toon", "janitor_sanitization"]
     post_gen_ids = ["persistence_extraction", "epoch_summarization"]
-    
+
     pre_gen_tests = [t for t in clerk_tests if t["id"] in pre_gen_ids]
     post_gen_tests = [t for t in clerk_tests if t["id"] in post_gen_ids]
 
@@ -72,37 +73,37 @@ def main():
     coding_results = []
 
     try:
+        print("Starting servers...")
         main_manager.start(main_model_info)
-        time.sleep(5)
         clerk_manager.start(clerk_model_info)
         
         main_evaluator = Evaluator(port=8085)
         clerk_evaluator = Evaluator(port=8086)
-        
-        print("\n--- PHASE 1: Pre-Generation (Clerk 4B) ---")
+
+        print("\n--- PHASE 1: Pre-Generation (Clerk) ---")
         for test in pre_gen_tests:
             metrics = clerk_evaluator.run_test(clerk_model_info['alias'], test)
             clerk_results.append({"test": test, "metrics": metrics})
             print(f"[clerk] -> {test['name']} TPS: {metrics.get('tps', 0):.2f}")
 
-        print("\n--- PHASE 2: Generation (Main 26B) ---")
+        print("\n--- PHASE 2: Generation (Main) ---")
         for test in coding_tests:
             metrics = main_evaluator.run_test(main_model_info['alias'], test)
             coding_results.append({"test": test, "metrics": metrics})
             print(f"[coding] -> {test['name']} TPS: {metrics.get('tps', 0):.2f}")
 
-        print("\n--- PHASE 3: Post-Generation (Clerk 4B) ---")
+        print("\n--- PHASE 3: Post-Generation (Clerk) ---")
         for test in post_gen_tests:
             metrics = clerk_evaluator.run_test(clerk_model_info['alias'], test)
             clerk_results.append({"test": test, "metrics": metrics})
             print(f"[clerk] -> {test['name']} TPS: {metrics.get('tps', 0):.2f}")
-            
+
         print("\nWriting Reports...")
         write_markdown_report("sequential_coding", main_model_info, coding_results)
         write_markdown_report("sequential_clerk", clerk_model_info, clerk_results)
-        
+
         print("\nSequential baton-pass evaluation completed successfully.")
-            
+
     except Exception as e:
         print(f"Error during combined evaluation: {e}")
     finally:

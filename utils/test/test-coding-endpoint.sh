@@ -11,6 +11,9 @@ case $MODEL_TYPE in
   "gemma-26b-q5")
     ALIAS="gemma-4-26b-q5"
     ;;
+  "gemma-26b-q4xl")
+    ALIAS="gemma-4-26b-q4xl"
+    ;;
   "gemma-31b-iq4")
     ALIAS="gemma-4-31b-iq4"
     ;;
@@ -20,25 +23,42 @@ case $MODEL_TYPE in
   "qwen-27b")
     ALIAS="qwen-3.5-27b"
     ;;
+  "qwen-35b")
+    ALIAS="qwen-3.6-35b"
+    ;;
   *)
-    echo "Unknown model type: $MODEL_TYPE. Supported: gemma-26b-q5, gemma-31b-iq4, gemma-31b-q4s, qwen-27b."
+    echo "Unknown model type: $MODEL_TYPE. Supported: gemma-26b-q5, gemma-31b-iq4, gemma-31b-q4s, qwen-27b, qwen-35b."
     exit 1
     ;;
 esac
 
+# Load environment variables
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
+HOST=${SERVER_HOST:-"0.0.0.0"}
+PORT=${MAIN_PORT:-"8085"}
+KEY=${API_KEY:-"2250"}
+
 # Create results directory if it doesn't exist
 mkdir -p "$RESULTS_DIR"
 
-echo "Running test for model: $MODEL_TYPE (alias: $ALIAS)..."
+echo "Running test for model: $MODEL_TYPE (alias: $ALIAS) on $HOST:$PORT..."
 
 # Capture start time in nanoseconds
 START_TIME=$(date +%s%N)
 
 # Perform the curl request, capturing the raw stream
 # We include "stream_options": {"include_usage": true} to get token counts if supported
-RAW_RESPONSE=$(curl -s http://localhost:8085/v1/chat/completions \
+MAX_TOKENS=4096
+if [ "$MODEL_TYPE" == "qwen-35b" ]; then
+    MAX_TOKENS=8192
+fi
+
+RAW_RESPONSE=$(curl -s http://$HOST:$PORT/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer 2250" \
+  -H "Authorization: Bearer $KEY" \
   -d '{
     "model": "'"$ALIAS"'",
     "messages": [
@@ -46,7 +66,7 @@ RAW_RESPONSE=$(curl -s http://localhost:8085/v1/chat/completions \
       {"role": "user", "content": "Implement a highly concurrent, thread-safe Token Bucket rate limiter algorithm. You MUST provide the full implementation in three distinct languages: 1) Kotlin (using Coroutines and Mutex/Atomic primitives), 2) Python (using asyncio), and 3) Rust (using Tokio and appropriate concurrency primitives). Pay extremely close attention to code quality, idiomatic naming conventions, precise indentation, absence of typos, and handling of edge cases, as these implementations will be rigorously evaluated for production readiness. Explain the concurrency trade-offs and primitives chosen in each language."}
     ],
     "stream": true,
-    "max_tokens": 4096,
+    "max_tokens": '$MAX_TOKENS',
     "stream_options": {"include_usage": true}
   }')
 
