@@ -6,9 +6,13 @@ mkdir -p "$RESULTS_DIR"
 for MODEL in qwen-35b; do
   echo "=== Evaluating $MODEL with higher token limit ==="
   
-  case $MODEL in
-    "qwen-35b") ALIAS="qwen-3.6-35b" ;;
-  esac
+  CONFIG_FILE="/home/llm/utils/test/framework/models.json"
+  ALIAS=$(jq -r --arg MODEL "$MODEL" '.[$MODEL].alias // empty' "$CONFIG_FILE")
+
+  if [ -z "$ALIAS" ]; then
+    echo "Skipping unknown model: $MODEL"
+    continue
+  fi
 
   # Ensure completely clean state
   killall -9 llama-server 2>/dev/null

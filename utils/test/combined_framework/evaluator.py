@@ -13,7 +13,7 @@ class Evaluator:
     def __init__(self, port=None):
         self.port = port or int(get_env("MAIN_PORT", 8085))
         self.host = get_env("SERVER_HOST", "0.0.0.0")
-        self.api_key = get_env("API_KEY", "2250")
+        self.api_key = get_env("API_KEY", None)
         
     def run_test(self, model_alias, test_case):
         url = f"http://{self.host}:{self.port}/v1/chat/completions"

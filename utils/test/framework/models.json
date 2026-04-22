@@ -76,6 +76,27 @@
     "context_size": 32768,
     "gpu_layers": 99,
     "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0",
+    "n_parallel": 1,
+    "extra_flags": "--fit on --batch-size 2048 --ubatch-size 1024 --no-mmap",
     "chat_template_kwargs": "{\"preserve_thinking\": true}"
+  },
+  "qwen-35b-orig": {
+    "path": "/home/llm/downloads/qwen/Qwen_Qwen3.6-35B-A3B-IQ4_NL.gguf",
+    "alias": "qwen-3.6-35b-orig",
+    "context_size": 32768,
+    "gpu_layers": 99,
+    "threads": 12,
+    "kv_flags": "-ctk q8_0 -ctv q8_0",
+    "n_parallel": 1,
+    "extra_flags": "--fit on --batch-size 2048 --ubatch-size 1024 --no-mmap",
+    "chat_template_kwargs": "{\"preserve_thinking\": true}"
+  },
+  "nemotron-3-nano": {
+    "path": "/home/llm/downloads/nemotron/NVIDIA-Nemotron-3-Nano-4B-IQ4_NL.gguf",
+    "alias": "nemotron-3-nano",
+    "context_size": 2048,
+    "gpu_layers": 99,
+    "threads": 8
   }
 }

@@ -2,103 +2,94 @@
 
 # Default model and port
 MODEL_TYPE=${1:-"gemma-26b-q5"}
-PORT=${2:-"8085"}
+DEFAULT_PORT=${2:-"8085"}
 LOG_DIR="/home/llm/utils/launch/logs"
 mkdir -p "$LOG_DIR"
 
+# Load environment variables
+if [ -f .env ]; then
+  # Simple env loading
+  export $(grep -v '^#' .env | xargs)
+fi
+
+HOST=${SERVER_HOST:-"0.0.0.0"}
+PORT=${DEFAULT_PORT:-${MAIN_PORT:-"8085"}}
+KEY=${API_KEY:-""}
+
 # Path to the llama-server binary
 SERVER_BIN="/home/llm/llama.cpp/build/bin/llama-server"
+CONFIG_FILE="/home/llm/utils/test/framework/models.json"
 
-# Model paths and aliases
-CONTEXT_SIZE=81920
-GPU_LAYERS=99
-KV_FLAGS=""
-
-case $MODEL_TYPE in
-  "gemma-26b-q5")
-    MODEL_PATH="/home/llm/downloads/gemma/gemma-4-26B-A4B-it-UD-Q5_K_M.gguf"
-    ALIAS="gemma-4-26b-q5"
-    CONTEXT_SIZE=72768
-    KV_FLAGS="-ctk q8_0 -ctv q8_0"
-    ;;
-  "gemma-26b-q4xl")
-    MODEL_PATH="/home/llm/downloads/gemma/gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf"
-    ALIAS="gemma-4-26b-q4xl"
-    CONTEXT_SIZE=72768
-    KV_FLAGS="-ctk q8_0 -ctv q8_0"
-    ;;
-  "gemma-31b-iq4")
-    MODEL_PATH="/home/llm/downloads/gemma/gemma-4-31B-it-IQ4_NL.gguf"
-    ALIAS="gemma-4-31b-iq4"
-    KV_FLAGS="-ctk q8_0 -ctv q8_0"
-    CONTEXT_SIZE=32768
-    ;;
-  "gemma-31b-q4s")
-    MODEL_PATH="/home/llm/downloads/gemma/gemma-4-31B-it-Q4_K_S.gguf"
-    ALIAS="gemma-4-31b-q4s"
-    KV_FLAGS="-ctk q8_0 -ctv q8_0"
-    CONTEXT_SIZE=32768
-    ;;
-  "qwen-27b")
-    MODEL_PATH="/home/llm/downloads/qwen/Qwen3.5-27B-Q5_K_M.gguf"
-    ALIAS="qwen-3.5-27b"
-    ;;
-  "qwen-35b")
-    MODEL_PATH="/home/llm/downloads/qwen/Qwen3.6-35B-A3B-UD-IQ4_NL.gguf"
-    ALIAS="qwen-3.6-35b"
-    CHAT_TEMPLATE_KWARGS='{"preserve_thinking": true}'
-    ;;
-  "nemotron-4b")
-    MODEL_PATH="/home/llm/downloads/nemotron/NVIDIA-Nemotron-3-Nano-4B-IQ4_NL.gguf"
-    ALIAS="nemotron-3-nano-4b"
-    CONTEXT_SIZE=32768
-    KV_FLAGS="-ctk q8_0 -ctv q8_0"
-    ;;
-  *)
-    echo "Unknown model type: $MODEL_TYPE. Supported: gemma-26b-q5, gemma-26b-q4xl, gemma-31b-iq4, gemma-31b-q4s, qwen-27b, qwen-35b, nemotron-4b."
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is not installed. It is required for parsing config files."
     exit 1
-    ;;
+fi
 
-  esac
+# Load model data from JSON
+MODEL_DATA=$(jq -r --arg MODEL "$MODEL_TYPE" '.[$MODEL] | select(. != null)' "$CONFIG_FILE")
 
-  # Launch the server
-  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-  LOG_FILE="$LOG_DIR/${MODEL_TYPE}_${TIMESTAMP}.log"
+if [ -z "$MODEL_DATA" ]; then
+    echo "Unknown model type: $MODEL_TYPE. Please check $CONFIG_FILE."
+    exit 1
+fi
 
-  echo "Starting $MODEL_TYPE server (Context: $CONTEXT_SIZE, Layers: $GPU_LAYERS)..."
-  echo "Logging to: $LOG_FILE"
+# Extract variables from JSON
+MODEL_PATH=$(echo "$MODEL_DATA" | jq -r '.path')
+ALIAS=$(echo "$MODEL_DATA" | jq -r '.alias')
+CONTEXT_SIZE=$(echo "$MODEL_DATA" | jq -r '.context_size // 81920')
+GPU_LAYERS=$(echo "$MODEL_DATA" | jq -r '.gpu_layers // 99')
+KV_FLAGS=$(echo "$MODEL_DATA" | jq -r '.kv_flags // ""')
+THREADS=$(echo "$MODEL_DATA" | jq -r '.threads // 12')
+N_PARALLEL=$(echo "$MODEL_DATA" | jq -r '.n_parallel // empty')
+EXTRA_FLAGS=$(echo "$MODEL_DATA" | jq -r '.extra_flags // ""')
+CHAT_TEMPLATE_KWARGS=$(echo "$MODEL_DATA" | jq -r '.chat_template_kwargs // empty')
 
-  # Run in background and redirect output
-  if [ -n "$CHAT_TEMPLATE_KWARGS" ]; then
-    $SERVER_BIN \
-      -m "$MODEL_PATH" \
-      -ngl $GPU_LAYERS \
-      -fa on \
-      $KV_FLAGS \
-      -c $CONTEXT_SIZE \
-      -t 12 \
-      --host "$HOST" --port "$PORT" \
-      --alias "$ALIAS" \
-      --jinja \
-      --chat-template-kwargs "$CHAT_TEMPLATE_KWARGS" \
-      --metrics \
-      --api-key "$KEY" \
-      --verbose > "$LOG_FILE" 2>&1 &
-  else
-    $SERVER_BIN \
-      -m "$MODEL_PATH" \
-      -ngl $GPU_LAYERS \
-      -fa on \
-      $KV_FLAGS \
-      -c $CONTEXT_SIZE \
-      -t 12 \
-      --host "$HOST" --port "$PORT" \
-      --alias "$ALIAS" \
-      --jinja \
-      --metrics \
-      --api-key "$KEY" \
-      --verbose > "$LOG_FILE" 2>&1 &
-  fi
+# Launch the server
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="$LOG_DIR/${MODEL_TYPE}_${TIMESTAMP}.log"
+
+echo "Starting $MODEL_TYPE server (Context: $CONTEXT_SIZE, Layers: $GPU_LAYERS)..."
+echo "Logging to: $LOG_FILE"
+
+# Prepare launch command
+CMD=("$SERVER_BIN" \
+  -m "$MODEL_PATH" \
+  -ngl "$GPU_LAYERS" \
+  -fa on \
+  -c "$CONTEXT_SIZE" \
+  -t "$THREADS" \
+  --host "$HOST" --port "$PORT" \
+  --alias "$ALIAS" \
+  --jinja \
+  --metrics \
+  --api-key "$KEY" \
+  --verbose)
+
+# Add optional flags
+if [ -n "$N_PARALLEL" ]; then
+  CMD+=("-np" "$N_PARALLEL")
+fi
+
+if [ -n "$KV_FLAGS" ]; then
+  # Split KV_FLAGS into separate arguments
+  read -ra FLAGS <<< "$KV_FLAGS"
+  CMD+=("${FLAGS[@]}")
+fi
+
+if [ -n "$EXTRA_FLAGS" ]; then
+  # Split EXTRA_FLAGS into separate arguments
+  read -ra EFLAGS <<< "$EXTRA_FLAGS"
+  CMD+=("${EFLAGS[@]}")
+fi
+
+if [ -n "$CHAT_TEMPLATE_KWARGS" ]; then
+  CMD+=(--chat-template-kwargs "$CHAT_TEMPLATE_KWARGS")
+fi
+
+# Run in background and redirect output
+nohup "${CMD[@]}" > "$LOG_FILE" 2>&1 &
+disown
 
 
 # Wait for server to be ready

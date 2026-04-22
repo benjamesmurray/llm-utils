@@ -4,10 +4,13 @@ RESULTS_DIR="/home/llm/utils/test/results"
 for MODEL in gemma-31b-q4s qwen-27b; do
   echo "=== Evaluating $MODEL ==="
   
-  case $MODEL in
-    "gemma-31b-q4s") ALIAS="gemma-4-31b-q4s" ;;
-    "qwen-27b") ALIAS="qwen-3.5-27b" ;;
-  esac
+  CONFIG_FILE="/home/llm/utils/test/framework/models.json"
+  ALIAS=$(jq -r --arg MODEL "$MODEL" '.[$MODEL].alias // empty' "$CONFIG_FILE")
+
+  if [ -z "$ALIAS" ]; then
+    echo "Skipping unknown model: $MODEL"
+    continue
+  fi
 
   # Ensure completely clean state
   killall -9 llama-server 2>/dev/null

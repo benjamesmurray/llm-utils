@@ -7,125 +7,43 @@ elif [ -f ../../.env ]; then
   export $(grep -v '^#' ../../.env | xargs)
 fi
 
-# Default variables from env or fallbacks
-PORT_MAIN=${MAIN_PORT:-"8085"}
-PORT_SIDE=${SIDE_PORT:-"8086"}
+# Configuration
+PORT=${MAIN_PORT:-"8085"}
 HOST=${SERVER_HOST:-"0.0.0.0"}
-KEY=${API_KEY:-"2250"}
-
-# Default main model
-MAIN_MODEL_TYPE=${1:-"gemma-26b"}
+KEY=${API_KEY:-""}
 LOG_DIR="/home/llm/utils/launch/logs"
 mkdir -p "$LOG_DIR"
 
-SERVER_BIN="/home/llm/llama.cpp/build/bin/llama-server"
+SWAP_BIN="/home/llm/utils/launch/llama-swap"
+CONFIG_FILE="/home/llm/utils/launch/llama-swap.yaml"
 
-# Stop any running llama-server
-echo "Stopping existing llama-server instances..."
-killall -9 llama-server 2>/dev/null
-sleep 1
+# Stop any running llama-server or llama-swap
+echo "Stopping existing instances..."
+killall -9 llama-server llama-swap 2>/dev/null
+sleep 2
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="$LOG_DIR/llama_swap_${TIMESTAMP}.log"
 
-# Main Model Configuration
-case $MAIN_MODEL_TYPE in
-  "gemma-26b")
-    MAIN_MODEL_PATH="/home/llm/downloads/gemma/gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf"
-    MAIN_ALIAS="gemma-4-26b-q4-xl"
-    MAIN_CONTEXT=32768
-    MAIN_CHAT_TEMPLATE_KWARGS=""
-    ;;
-  "qwen-35b")
-    MAIN_MODEL_PATH="/home/llm/downloads/qwen/Qwen3.6-35B-A3B-UD-IQ4_NL.gguf"
-    MAIN_ALIAS="qwen-3.6-35b"
-    MAIN_CONTEXT=32768
-    MAIN_CHAT_TEMPLATE_KWARGS='{"preserve_thinking": true}'
-    ;;
-  *)
-    echo "Unknown main model type: $MAIN_MODEL_TYPE. Supported: gemma-26b, qwen-35b."
-    exit 1
-    ;;
-esac
+echo "Starting llama-swap Proxy on $HOST:$PORT..."
+echo "Configuration: $CONFIG_FILE"
+echo "Approach: SWAP (Single Model at a time)"
+echo "Logging to: $LOG_FILE"
 
-MAIN_LOG="$LOG_DIR/dual_main_${TIMESTAMP}.log"
+# Launch llama-swap
+nohup "$SWAP_BIN" --listen "$HOST:$PORT" --config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
 
-echo "Starting Main Model ($MAIN_ALIAS) on $HOST:$PORT_MAIN..."
-if [ -n "$MAIN_CHAT_TEMPLATE_KWARGS" ]; then
-  $SERVER_BIN \
-    -m "$MAIN_MODEL_PATH" \
-    -ngl 99 \
-    -fa on \
-    -ctk q8_0 -ctv q8_0 \
-    -c $MAIN_CONTEXT \
-    -t 12 \
-    --host "$HOST" --port "$PORT_MAIN" \
-    --alias "$MAIN_ALIAS" \
-    --jinja \
-    --chat-template-kwargs "$MAIN_CHAT_TEMPLATE_KWARGS" \
-    --metrics \
-    --api-key "$KEY" \
-    --verbose > "$MAIN_LOG" 2>&1 &
-else
-  $SERVER_BIN \
-    -m "$MAIN_MODEL_PATH" \
-    -ngl 99 \
-    -fa on \
-    -ctk q8_0 -ctv q8_0 \
-    -c $MAIN_CONTEXT \
-    -t 12 \
-    --host "$HOST" --port "$PORT_MAIN" \
-    --alias "$MAIN_ALIAS" \
-    --jinja \
-    --metrics \
-    --api-key "$KEY" \
-    --verbose > "$MAIN_LOG" 2>&1 &
-fi
+disown
 
-# 2. Side Model: Nemotron-3-Nano-4B (IQ4_NL)
-SIDE_MODEL_PATH="/home/llm/downloads/nemotron/NVIDIA-Nemotron-3-Nano-4B-IQ4_NL.gguf"
-SIDE_ALIAS="nemotron-3-nano-4b"
-SIDE_CONTEXT=32768
-SIDE_LOG="$LOG_DIR/dual_side_${TIMESTAMP}.log"
-
-echo "Starting Side Model ($SIDE_ALIAS) on $HOST:$PORT_SIDE..."
-$SERVER_BIN \
-  -m "$SIDE_MODEL_PATH" \
-  -ngl 99 \
-  -fa on \
-  -ctk q8_0 -ctv q8_0 \
-  -c $SIDE_CONTEXT \
-  -t 4 \
-  --host "$HOST" --port "$PORT_SIDE" \
-  --alias "$SIDE_ALIAS" \
-  --jinja \
-  --metrics \
-  --api-key "$KEY" \
-  --verbose > "$SIDE_LOG" 2>&1 &
-
-# Wait for both servers to initialize on $HOST
-echo "Waiting for servers to initialize on $HOST..."
-MAIN_READY=0
-SIDE_READY=0
-
-for i in {1..120}; do
-  if [ $MAIN_READY -eq 0 ] && curl -s http://$HOST:$PORT_MAIN/v1/models | grep -q "$MAIN_ALIAS"; then
-    echo "Main Model (Port $PORT_MAIN) is UP and ready."
-    MAIN_READY=1
-  fi
-  
-  if [ $SIDE_READY -eq 0 ] && curl -s http://$HOST:$PORT_SIDE/v1/models | grep -q "$SIDE_ALIAS"; then
-    echo "Side Model (Port $PORT_SIDE) is UP and ready."
-    SIDE_READY=1
-  fi
-
-  if [ $MAIN_READY -eq 1 ] && [ $SIDE_READY -eq 1 ]; then
-    echo "Both servers are UP and ready."
+# Wait for proxy to be ready
+echo "Waiting for proxy to initialize..."
+for i in {1..30}; do
+  if curl -s http://$HOST:$PORT/health | grep -q "ok" || curl -s http://$HOST:$PORT/ui > /dev/null; then
+    echo "llama-swap Proxy is UP and ready."
+    echo "Dashboard available at: http://$HOST:$PORT/ui"
     exit 0
   fi
-  
   sleep 2
 done
 
-echo "Error: One or both servers failed to start within 120 seconds."
-echo "Check logs at: $MAIN_LOG and $SIDE_LOG"
-exit 1
+echo "Warning: llama-swap check timed out. Check logs at: $LOG_FILE"

@@ -1,0 +1,20 @@
+healthCheckTimeout: 120
+
+models:
+  qwen3.6-35b-a3b-coding:
+    cmd: "/home/llm/llama.cpp/build/bin/llama-server -m /home/llm/downloads/qwen/Qwen_Qwen3.6-35B-A3B-IQ4_NL.gguf -ngl 99 -fa on -c 65536 -t 12 --alias qwen3.6-35b-a3b-coding --jinja --reasoning on --chat-template-kwargs '{\"preserve_thinking\":true}' -ctk q8_0 -ctv q8_0 --fit on --batch-size 2048 --ubatch-size 1024 --no-mmap --mlock --api-key ${API_KEY} --verbose --port ${PORT}"
+    proxy: "http://127.0.0.1:${PORT}"
+    ttl: 300
+
+  nemotron-3-nano:
+    cmd: "/home/llm/llama.cpp/build/bin/llama-server -m /home/llm/downloads/nemotron/NVIDIA-Nemotron-3-Nano-4B-IQ4_NL.gguf -ngl 99 -fa on -c 32768 -t 8 --alias nemotron-3-nano --jinja -ctk q8_0 -ctv q8_0 --fit on --batch-size 2048 --ubatch-size 1024 --no-mmap --mlock --api-key ${API_KEY} --verbose --port ${PORT}"
+    proxy: "http://127.0.0.1:${PORT}"
+    ttl: 300
+
+# Matrix disabled for "Swap" approach (only 1 model at a time)
+# matrix:
+#   vars:
+#     q: qwen3.6-35b-a3b-coding
+#     n: nemotron-3-nano
+#   sets:
+#     dual: "q & n"

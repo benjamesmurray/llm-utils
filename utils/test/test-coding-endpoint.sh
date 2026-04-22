@@ -6,31 +6,14 @@ RESULTS_DIR="/home/llm/utils/test/results"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RESULT_FILE="$RESULTS_DIR/test_${MODEL_TYPE}_${TIMESTAMP}.md"
 
-# Map MODEL_TYPE to ALIAS (matching launch-server.sh)
-case $MODEL_TYPE in
-  "gemma-26b-q5")
-    ALIAS="gemma-4-26b-q5"
-    ;;
-  "gemma-26b-q4xl")
-    ALIAS="gemma-4-26b-q4xl"
-    ;;
-  "gemma-31b-iq4")
-    ALIAS="gemma-4-31b-iq4"
-    ;;
-  "gemma-31b-q4s")
-    ALIAS="gemma-4-31b-q4s"
-    ;;
-  "qwen-27b")
-    ALIAS="qwen-3.5-27b"
-    ;;
-  "qwen-35b")
-    ALIAS="qwen-3.6-35b"
-    ;;
-  *)
-    echo "Unknown model type: $MODEL_TYPE. Supported: gemma-26b-q5, gemma-31b-iq4, gemma-31b-q4s, qwen-27b, qwen-35b."
+# Map MODEL_TYPE to ALIAS using models.json
+CONFIG_FILE="/home/llm/utils/test/framework/models.json"
+ALIAS=$(jq -r --arg MODEL "$MODEL_TYPE" '.[$MODEL].alias // empty' "$CONFIG_FILE")
+
+if [ -z "$ALIAS" ]; then
+    echo "Unknown model type: $MODEL_TYPE. Please check $CONFIG_FILE."
     exit 1
-    ;;
-esac
+fi
 
 # Load environment variables
 if [ -f .env ]; then
@@ -39,7 +22,7 @@ fi
 
 HOST=${SERVER_HOST:-"0.0.0.0"}
 PORT=${MAIN_PORT:-"8085"}
-KEY=${API_KEY:-"2250"}
+KEY=${API_KEY:-""}
 
 # Create results directory if it doesn't exist
 mkdir -p "$RESULTS_DIR"
@@ -52,7 +35,8 @@ START_TIME=$(date +%s%N)
 # Perform the curl request, capturing the raw stream
 # We include "stream_options": {"include_usage": true} to get token counts if supported
 MAX_TOKENS=4096
-if [ "$MODEL_TYPE" == "qwen-35b" ]; then
+# Increase tokens for larger models (like Qwen 35B)
+if [[ "$ALIAS" == *"qwen-3.6-35b"* ]]; then
     MAX_TOKENS=8192
 fi
 
